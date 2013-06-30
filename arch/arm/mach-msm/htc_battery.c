@@ -639,8 +639,19 @@ static int htc_cable_status_update(int status)
 	 * if receives AC notification */
 	last_source = htc_batt_info.rep.charging_source;
 	if (status == CHARGER_USB && g_usb_online == 0) {
+#ifdef CONFIG_FORCE_FAST_CHARGE
+		if (force_fast_charge == 1) {
+			BATT_LOG("cable USB forced fast charge");
+			htc_set_smem_cable_type(CHARGER_AC);
+			htc_batt_info.rep.charging_source = CHARGER_AC;
+		} else {
+			htc_set_smem_cable_type(CHARGER_USB);
+			htc_batt_info.rep.charging_source = CHARGER_USB;
+		}
+#else
 		htc_set_smem_cable_type(CHARGER_USB);
 		htc_batt_info.rep.charging_source = CHARGER_USB;
+#endif
 	} else {
 		htc_set_smem_cable_type(status);
 		htc_batt_info.rep.charging_source  = status;

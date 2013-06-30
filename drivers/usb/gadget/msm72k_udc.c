@@ -62,6 +62,9 @@ static const char driver_name[] = "msm72k_udc";
 
 #define SETUP_BUF_SIZE     8
 
+#ifdef CONFIG_FORCE_FAST_CHARGE
+#include <linux/fastchg.h>
+#endif
 
 static const char *const ep_name[] = {
 	"ep0out", "ep1out", "ep2out", "ep3out",
@@ -104,6 +107,7 @@ struct msm_request {
 #define to_msm_otg(xceiv)  container_of(xceiv, struct msm_otg, otg)
 #define is_b_sess_vld()	((OTGSC_BSV & readl(USB_OTGSC)) ? 1 : 0)
 #define is_usb_online(ui) (ui->usb_state != USB_STATE_NOTATTACHED)
+#define to_msm_otg(xceiv)  container_of(xceiv, struct msm_otg, otg)
 
 struct msm_endpoint {
 	struct usb_ep ep;
@@ -215,13 +219,11 @@ struct usb_info {
 	atomic_t softconnect;
 #ifdef CONFIG_USB_OTG
 	u8 hnp_avail;
-#endif
-
+#endif    
 	atomic_t remote_wakeup;
+	struct otg_transceiver *xceiv;
 	atomic_t self_powered;
 	struct delayed_work rw_work;
-
-	struct otg_transceiver *xceiv;
 	enum usb_device_state usb_state;
 	struct wake_lock	wlock;
 };
@@ -290,12 +292,21 @@ static ssize_t print_switch_state(struct switch_dev *sdev, char *buf)
 		sdev->state ? "online" : "offline");
 }
 
+
+
 static inline enum chg_type usb_get_chg_type(struct usb_info *ui)
 {
-	if ((readl(USB_PORTSC) & PORTSC_LS) == PORTSC_LS)
+#ifdef CONFIG_FORCE_FAST_CHARGE
+	if ((readl(USB_PORTSC) & PORTSC_LS) == PORTSC_LS || force_fast_charge == 1) {
+	printk(KERN_INFO "fast charge on");
+#else
+	if ((readl(USB_PORTSC) & PORTSC_LS) == PORTSC_LS) {
+#endif
 		return USB_CHG_TYPE__WALLCHARGER;
-	else
+	} else {
 		return USB_CHG_TYPE__SDP;
+	}
+
 }
 
 #define USB_WALLCHARGER_CHG_CURRENT 1800
