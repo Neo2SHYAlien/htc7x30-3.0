@@ -381,6 +381,9 @@ extern struct cpufreq_governor cpufreq_gov_lagfree;
 #elif defined(CONFIG_CPU_FREQ_DEFAULT_GOV_INTELLIDEMAND)
 extern struct cpufreq_governor cpufreq_gov_intellidemand;
 #define CPUFREQ_DEFAULT_GOVERNOR (&cpufreq_gov_intellidemand)
+#elif defined(CONFIG_CPU_FREQ_DEFAULT_GOV_SMARTASSH3)
+extern struct cpufreq_governor cpufreq_gov_smartass_h3;
+#define CPUFREQ_DEFAULT_GOVERNOR (&cpufreq_gov_smartass_h3)
 #endif
 
 /*********************************************************************
